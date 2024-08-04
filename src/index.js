@@ -22,10 +22,15 @@ async function handleRequest(request) {
 		return new Response('Invalid URL', { status: 400 });
 	}
 
+	// Handle CORS preflight request
+	if (request.method === 'OPTIONS') {
+		return handleOptions(request);
+	}
+
 	const init = {
 		method: request.method,
 		headers: request.headers,
-		body: request.body,
+		body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : null,
 		redirect: 'follow',
 	};
 
@@ -33,9 +38,10 @@ async function handleRequest(request) {
 		const response = await fetch(targetUrl, init);
 
 		const headers = new Headers(response.headers);
-		headers.set('Access-Control-Allow-Origin', '*');
+		headers.set('Access-Control-Allow-Origin', request.headers.get('origin') || '*');
 		headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-		headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+		headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-mal-client-id');
+		headers.set('Vary', 'Origin');
 
 		const body = await response.text();
 		return new Response(body, {
@@ -46,4 +52,18 @@ async function handleRequest(request) {
 	} catch (error) {
 		return new Response('Error: ' + error.message, { status: 500 });
 	}
+}
+
+function handleOptions(request) {
+	const headers = new Headers();
+	headers.set('Access-Control-Allow-Origin', request.headers.get('origin') || '*');
+	headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+	headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-mal-client-id');
+	headers.set('Access-Control-Max-Age', '86400'); // Cache the preflight response for 24 hours
+	headers.set('Vary', 'Origin');
+
+	return new Response(null, {
+		status: 204,
+		headers: headers,
+	});
 }
