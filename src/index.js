@@ -43,7 +43,17 @@ async function handleRequest(request) {
 		headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-mal-client-id');
 		headers.set('Vary', 'Origin');
 
-		const body = await response.text();
+		let body;
+    const contentType = response.headers.get('Content-Type') || '';
+    
+    if (contentType.includes('application/json')) {
+      body = JSON.stringify(await response.json());
+    } else if (contentType.includes('text/')) {
+      body = await response.text();
+    } else {
+      body = await response.blob();
+    }
+
 		return new Response(body, {
 			status: response.status,
 			statusText: response.statusText,
@@ -57,7 +67,7 @@ async function handleRequest(request) {
 function handleOptions(request) {
 	const headers = new Headers();
 	headers.set('Access-Control-Allow-Origin', request.headers.get('origin') || '*');
-	headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+	headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 	headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-mal-client-id');
 	headers.set('Access-Control-Max-Age', '86400'); // Cache the preflight response for 24 hours
 	headers.set('Vary', 'Origin');
