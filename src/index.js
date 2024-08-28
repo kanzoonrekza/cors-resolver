@@ -39,7 +39,7 @@ async function handleRequest(request) {
 
 		const headers = new Headers(response.headers);
 		headers.set('Access-Control-Allow-Origin', request.headers.get('origin') || '*');
-		headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+		headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
 		headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-mal-client-id');
 		headers.set('Vary', 'Origin');
 
